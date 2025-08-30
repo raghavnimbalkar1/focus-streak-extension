@@ -1,19 +1,31 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf-8" />
     <title>Focus Streak</title>
-    <link rel="stylesheet" href="popup.css">
+    <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <h2>Focus Time</h2>
+    <div class="container">
+      <header>
+        <h1>🔥 Focus Streak</h1>
+        <div class="streak">Streak: <span id="streak">0</span> days</div>
+      </header>
 
-    <div id="stats">
-      <ul id="timeList"></ul>
+      <section class="summary">
+        <div>Total today: <strong id="total-min">0 min</strong></div>
+        <button id="reset-btn" title="Reset today's data">Reset Today</button>
+      </section>
+
+      <section class="sites">
+        <h2>Sites (today)</h2>
+        <div id="site-list" class="site-list">Loading…</div>
+      </section>
+
+      <footer>
+        <small>Tip: productive default goal is <span id="goal-min">30</span> min/day.</small>
+      </footer>
     </div>
-
-    <footer>
-      <small>Stay focused</small>
-    </footer>
 
     <script src="popup.js"></script>
   </body>

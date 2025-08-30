@@ -1,49 +1,42 @@
+/* popup.css - minimal, modern look */
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --accent: #2563eb;
+  --muted: #6b7280;
+  --danger: #ef4444;
+}
+
+* { box-sizing: border-box; }
 body {
-  font-family: 'Segoe UI', Tahoma, sans-serif;
+  margin: 0;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: #0f172a;
+  width: 320px;
   padding: 12px;
-  margin: 0;
-  width: 280px;
-  background: #f9fafb;
-  color: #111;
 }
 
-h2 {
-  margin: 0 0 10px;
-  font-size: 18px;
-  color: #2563eb; /* blue accent */
-}
+.container { display: flex; flex-direction: column; gap: 10px; }
 
-#stats {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 10px;
-  max-height: 200px;
-  overflow-y: auto;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
+header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+header h1 { margin: 0; font-size: 16px; color: var(--accent); }
+.streak { font-size: 13px; color: var(--muted); }
 
-ul {
-  list-style: none;
-  padding-left: 0;
-  margin: 0;
+.summary { display:flex; align-items:center; justify-content: space-between; background: var(--card); border-radius: 8px;
+  padding: 8px; box-shadow: 0 1px 3px rgba(2,6,23,0.06); }
+.summary button {
+  background: transparent; border: 1px solid #e6eefc; color: var(--accent); padding: 6px 8px; border-radius: 6px;
+  cursor: pointer; font-size: 12px;
 }
+.summary button:hover { background: #f1f8ff; }
 
-li {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 4px;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 14px;
-}
+.sites { background: var(--card); border-radius: 8px; padding: 8px; box-shadow: 0 1px 3px rgba(2,6,23,0.06); }
+.sites h2 { margin: 0 0 8px 0; font-size: 13px; color: var(--muted); }
+.site-list { max-height: 200px; overflow-y: auto; }
+.site-item { display:flex; justify-content: space-between; padding: 6px 4px; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+.site-item:last-child { border-bottom: none; }
+.domain { color: #111827; }
+.mins { color: var(--muted); }
 
-li:last-child {
-  border-bottom: none;
-}
-
-footer {
-  margin-top: 12px;
-  text-align: center;
-  font-size: 12px;
-  color: #6b7280;
-}
+footer { text-align: center; font-size: 12px; color: var(--muted); }
