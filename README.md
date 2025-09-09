@@ -53,7 +53,3 @@ Focus Streak recognizes hundreds of educational websites including:
 - And many more!
 
 You can easily customize the productive sites list in the extension's code.
-
-## 🛠️ Development
-
-### Project Structure
