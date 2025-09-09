@@ -14,7 +14,7 @@ const PRODUCTIVE_SITES = [
   "stackoverflow.com", "github.com", "gitlab.com", "bitbucket.org",
   "freecodecamp.org", "codepen.io", "jsfiddle.net", "replit.com",
   "glitch.com", "codesandbox.io", "hackerrank.com", "leetcode.com",
-  "codewars.com", "exercism.io", "topcoder.com", "code.org",
+  "codewars.com", "exercism.io", "topcoder.com", "chatgpt.com", "chat.deepseek.com", "gemini.google.com", "code.org",
   "w3schools.com", "mdn.io", "dev.to", "css-tricks.com",
   "stackexchange.com", "superuser.com", "serverfault.com",
   
