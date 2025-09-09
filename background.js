@@ -15,6 +15,8 @@ const PRODUCTIVE_SITES = [
 let activeTabId = null;
 let activeDomain = null;
 let lastStart = Date.now();
+let isTracking = false;
+let trackingInterval = null;
 
 // --- Promisified chrome storage/tab helpers ---
 function getStorage(keys) {
@@ -52,6 +54,32 @@ function msUntilNextMidnight() {
   return next.getTime() - now.getTime();
 }
 
+// Check if domain is productive
+function isProductiveDomain(domain) {
+  if (!domain) return false;
+  return PRODUCTIVE_SITES.some(site => domain.includes(site));
+}
+
+// Start the tracking interval
+function startTrackingInterval() {
+  if (trackingInterval) clearInterval(trackingInterval);
+  
+  trackingInterval = setInterval(async () => {
+    if (activeDomain && isTracking) {
+      const now = Date.now();
+      const elapsedSeconds = Math.floor((now - lastStart) / 1000);
+      
+      if (elapsedSeconds >= 15) { // Save every 15 seconds
+        await incrementTime(activeDomain, elapsedSeconds);
+        lastStart = now;
+        
+        // Update UI if popup is open
+        chrome.runtime.sendMessage({type: "timeUpdated"}).catch(() => {});
+      }
+    }
+  }, 5000); // Check every 5 seconds
+}
+
 // Increment time (seconds) for domain in storage
 async function incrementTime(domain, seconds) {
   if (!domain || seconds <= 0) return;
@@ -60,16 +88,44 @@ async function incrementTime(domain, seconds) {
   timeData[domain] = (timeData[domain] || 0) + seconds;
   await setStorage({ [TIME_KEY]: timeData });
   console.log(`Saved +${seconds}s for ${domain} (total ${(timeData[domain] || 0)}s)`);
+  
+  // Check if we should update streak immediately
+  await checkAndUpdateStreak();
+}
+
+// Check if we've reached the daily goal and update streak
+async function checkAndUpdateStreak() {
+  const data = await getStorage([TIME_KEY, STREAK_KEY, LAST_DATE_KEY]);
+  const storedTimes = data[TIME_KEY] || {};
+  let streak = data[STREAK_KEY] || 0;
+  
+  // Calculate productive seconds
+  let productiveSeconds = 0;
+  for (const [domain, secs] of Object.entries(storedTimes)) {
+    if (isProductiveDomain(domain)) {
+      productiveSeconds += secs;
+    }
+  }
+  
+  const productiveMinutes = Math.floor(productiveSeconds / 60);
+  
+  // If we've reached the goal, update streak
+  if (productiveMinutes >= DAILY_GOAL_MINUTES && streak === 0) {
+    streak = 1;
+    await setStorage({ [STREAK_KEY]: streak });
+    console.log(`✅ Streak started! productiveMinutes=${productiveMinutes}. New streak=${streak}`);
+  }
 }
 
 // Called when switching away from current site — save elapsed
 async function saveElapsedForCurrent() {
-  if (!activeDomain || !lastStart) return;
+  if (!activeDomain || !lastStart || !isTracking) return;
   const now = Date.now();
   const elapsedSeconds = Math.floor((now - lastStart) / 1000);
   if (elapsedSeconds > 0) {
     await incrementTime(activeDomain, elapsedSeconds);
   }
+  lastStart = now;
 }
 
 // Daily rollover check: evaluate yesterday's productive minutes -> update streak -> reset timeData
@@ -89,17 +145,19 @@ async function dailyRolloverIfNeeded() {
     // Evaluate productive minutes from the storedTimes (yesterday)
     let productiveSeconds = 0;
     for (const [domain, secs] of Object.entries(storedTimes)) {
-      if (PRODUCTIVE_SITES.some((p) => domain.includes(p))) {
+      if (isProductiveDomain(domain)) {
         productiveSeconds += secs;
       }
     }
     const productiveMinutes = Math.floor(productiveSeconds / 60);
-    if (productiveMinutes >= DAILY_GOAL_MINUTES) {
-      streak += 1;
-      console.log(`✅ Earned streak. productiveMinutes=${productiveMinutes}. New streak=${streak}`);
-    } else {
+    
+    // Check if we should break the streak
+    if (productiveMinutes < DAILY_GOAL_MINUTES && streak > 0) {
       streak = 0;
       console.log(`❌ Missed goal. productiveMinutes=${productiveMinutes}. Streak reset.`);
+    } else if (productiveMinutes >= DAILY_GOAL_MINUTES) {
+      streak += 1;
+      console.log(`✅ Earned streak. productiveMinutes=${productiveMinutes}. New streak=${streak}`);
     }
 
     // Reset site times for the new day and store new lastDate & streak
@@ -108,6 +166,16 @@ async function dailyRolloverIfNeeded() {
       [STREAK_KEY]: streak,
       [LAST_DATE_KEY]: todayStr(),
     });
+    
+    // Send notification if streak was broken
+    if (streak === 0 && productiveMinutes < DAILY_GOAL_MINUTES) {
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'icons/icon48.png',
+        title: 'Focus Streak Broken',
+        message: `You missed your daily goal of ${DAILY_GOAL_MINUTES} minutes. Your streak has been reset.`
+      });
+    }
   }
 }
 
@@ -116,6 +184,25 @@ function scheduleMidnightAlarm() {
   const ms = msUntilNextMidnight();
   chrome.alarms.create("midnightReset", { when: Date.now() + ms });
   console.log(`Midnight alarm scheduled in ${Math.round(ms / 1000)}s`);
+}
+
+// Send notification if user is on non-productive site for too long
+async function checkProductiveTime() {
+  if (!activeDomain) return;
+  
+  const data = await getStorage(TIME_KEY);
+  const timeData = data[TIME_KEY] || {};
+  const currentSiteTime = timeData[activeDomain] || 0;
+  
+  // If on non-productive site for more than 5 minutes, send notification
+  if (!isProductiveDomain(activeDomain) && currentSiteTime > 300) {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icons/icon48.png',
+      title: 'Focus Alert',
+      message: `You've been on ${activeDomain} for over 5 minutes. Consider returning to your studies!`
+    });
+  }
 }
 
 // --- Event listeners ---
@@ -131,6 +218,8 @@ chrome.runtime.onInstalled.addListener(async () => {
     activeTabId = tabs[0].id;
     activeDomain = getDomain(tabs[0].url) || "newtab";
     lastStart = Date.now();
+    isTracking = true;
+    startTrackingInterval();
   }
 });
 
@@ -144,6 +233,8 @@ chrome.runtime.onInstalled.addListener(async () => {
       activeTabId = tabs[0].id;
       activeDomain = getDomain(tabs[0].url) || null;
       lastStart = Date.now();
+      isTracking = true;
+      startTrackingInterval();
     }
     console.log("Background init done. activeDomain=", activeDomain);
   } catch (e) {
@@ -164,7 +255,11 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
     activeTabId = activeInfo.tabId;
     activeDomain = getDomain(tab?.url) || null;
     lastStart = Date.now();
-    // console log
+    isTracking = true;
+    
+    // Check if we should send a notification about time spent
+    await checkProductiveTime();
+    
     console.log("Activated tab ->", activeDomain);
   } catch (e) {
     console.error("onActivated error:", e);
@@ -180,6 +275,11 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       await saveElapsedForCurrent();
       activeDomain = getDomain(tab.url) || null;
       lastStart = Date.now();
+      isTracking = true;
+      
+      // Check if we should send a notification about time spent
+      await checkProductiveTime();
+      
       console.log("Tab updated (active) ->", activeDomain);
     }
   } catch (e) {
@@ -197,7 +297,7 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
       await saveElapsedForCurrent();
       activeDomain = null;
       activeTabId = null;
-      lastStart = Date.now();
+      isTracking = false;
       console.log("Window lost focus -> paused tracking");
     } else {
       // regained focus: set active tab domain
@@ -207,6 +307,11 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
         activeTabId = tabs[0].id;
         activeDomain = getDomain(tabs[0].url) || null;
         lastStart = Date.now();
+        isTracking = true;
+        
+        // Check if we should send a notification about time spent
+        await checkProductiveTime();
+        
         console.log("Window focus ->", activeDomain);
       }
     }
@@ -229,6 +334,6 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 // Ensure we save elapsed time when the worker is unloaded (best-effort)
-self.addEventListener && self.addEventListener("unload", () => {
+chrome.runtime.onSuspend.addListener(() => {
   saveElapsedForCurrent().catch(() => {});
 });
