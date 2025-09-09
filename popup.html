@@ -13,8 +13,22 @@
       </header>
 
       <section class="summary">
-        <div>Total today: <strong id="total-min">0 min</strong></div>
-        <button id="reset-btn" title="Reset today's data">Reset Today</button>
+        <div class="summary-stats">
+          <div>Total: <strong id="total-min">0 min</strong></div>
+          <div>Productive: <strong id="productive-min">0 min</strong></div>
+        </div>
+        
+        <div class="progress">
+          <div class="progress-bar">
+            <div id="progress-bar" class="progress-bar-inner"></div>
+          </div>
+          <div id="progress-text" class="progress-text">30 min left to goal</div>
+        </div>
+        
+        <div class="summary-actions">
+          <button id="refresh-btn" title="Refresh data">Refresh</button>
+          <button id="reset-btn" title="Reset today's data">Reset Today</button>
+        </div>
       </section>
 
       <section class="sites">
