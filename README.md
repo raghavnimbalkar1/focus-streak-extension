@@ -26,7 +26,7 @@ A Chrome extension that helps you build study habits by tracking time spent on p
 
 ### Manual Installation
 1. Download or clone this repository
-2. Open Chrome and navigate to `chrome://extensions/`
+2. Open Chrome/Brave and navigate to `chrome://extensions/`
 3. Enable "Developer mode" (toggle in top right)
 4. Click "Load unpacked" and select the extension folder
 5. The Focus Streak icon will appear in your toolbar
