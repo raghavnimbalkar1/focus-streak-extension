@@ -1,4 +1,4 @@
-# 🔥 Focus Streak
+# Focus Streak
 
 A Chrome extension that helps you build study habits by tracking time spent on productive websites and maintaining a streak system.
 
