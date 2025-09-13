@@ -6,7 +6,7 @@ A Chrome extension that helps you build study habits by tracking time spent on p
 ![Chrome Web Store](https://img.shields.io/chrome-web-store/v/none-yet?label=Chrome%20Web%20Store)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 
-![Focus Streak Banner](https://via.placeholder.com/800x200/0a0a0a/ff3333?text=Focus+Streak+-+Build+Productive+Habits)
+![Focus Streak Banner](<img width="313" height="500" alt="Image" src="https://github.com/user-attachments/assets/84e162cf-3207-441d-828c-2890e6f594ea" />)
 
 ## ✨ Features
 
