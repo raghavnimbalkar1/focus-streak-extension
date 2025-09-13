@@ -2,7 +2,7 @@
 
 A Chrome extension that helps you build study habits by tracking time spent on productive websites and maintaining a streak system.
 
-![Focus Streak](https://img.shields.io/badge/Version-1.0.0-brightgreen.svg)
+![Focus Streak](https://img.shields.io/badge/Version-1.0.1-brightgreen.svg)
 ![Chrome Web Store](https://img.shields.io/chrome-web-store/v/none-yet?label=Chrome%20Web%20Store)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 
